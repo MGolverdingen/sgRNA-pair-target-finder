@@ -1,6 +1,10 @@
-with open('resultstrpI2.tsv', 'r') as f:
-    header = f.readline()
-    data = f.readlines()
+import pandas as pd
+
+def read_chopchop_data(chopchop_filename): 
+    with open(chopchop_filename, 'r') as f:
+        header = f.readline()
+        data = f.readlines()
+    return(header,data)
 ##
 def get_gRNA_data(header, data):    
     MATCH_NUMBER_FIELD = 0
@@ -29,43 +33,63 @@ def get_gRNA_data(header, data):
     positive_g_rna_list = [g for g in g_rna_list if g['sign'] == '+']
     negative_g_rna_list = [g for g in g_rna_list if g['sign'] == '-']
     return(positive_g_rna_list, negative_g_rna_list)
+
 ##
 def check_spacer_length_between_gRNAs(positive_g_rna_list,negative_g_rna_list):
     UPPER_LIMIT = 35
     LOWER_LIMIT = 5
-    result_matches = []
     # fasta_matches = ""
     fasta_seq = []
     fasta_name = []
+    result_matches =[]
+    result_dict = {}
+    count = 0
     for pos_g_rna in positive_g_rna_list:
         for neg_g_rna in negative_g_rna_list:
             distance = pos_g_rna['position'] - neg_g_rna['position']
             if distance <= UPPER_LIMIT and distance >= LOWER_LIMIT:
                 # print(distance, pos_g_rna, neg_g_rna)
                 # fasta_matches = fasta_matches + '>sequence A\n' + pos_g_rna['sequence'] + '\n\n>sequence B\n' + neg_g_rna['sequence']
-                result_matches.append([distance, pos_g_rna,neg_g_rna])
-                fasta_seq.append(pos_g_rna['sequence'])
-                fasta_seq.append(neg_g_rna['sequence'])
-                fasta_name.append(pos_g_rna['match_no'])
-                fasta_name.append(neg_g_rna['match_no'])
-  
+                count = count + 1
+                result_dict = {
+                    "chopchop_quality_of_pair" : count,
+                    "distance": distance,
+                    "match_no_positive" : pos_g_rna['match_no'],
+                    "match_no_negative" : neg_g_rna['match_no'],
+                    "sequence_positive" : pos_g_rna['sequence'],
+                    "sequence_negative" : neg_g_rna['sequence']
+                }
+                result_matches.append(result_dict)
+             
+    matches_df = pd.DataFrame(result_matches)
+            
     fasta_name_uqe = list(set(fasta_name))
     fasta_seq_uqe = list(set(fasta_seq))
-    return (fasta_seq, fasta_name, fasta_name_uqe, fasta_seq_uqe)
+    return (result_matches, fasta_seq, fasta_name, fasta_seq_uqe, fasta_name_uqe)
+##
+def write_fasta_pairs_file(name, sequence, fasta_filename):
+    with open(fasta_filename, "w") as ofile:
+        for i in range(len(sequence)):
+            ofile.write(">" + name[i] + '\n' + sequence[i] + '\n')
 
-with open("fasta_pairs.fasta", "w") as ofile:
-    for i in range(0,len(fasta_seq),2):
-        ofile.write(">" + fasta_name[i] + ' ' + fasta_name[i+1] + '\n' + fasta_seq[i] + '\n' + fasta_seq[i+1] + '\n')
+    
+        
+        
+        
+        
+# with open("fasta_pairs.fasta", "w") as ofile:
+#     for i in range(0,len(fasta_seq),2):
+#         ofile.write(">" + fasta_name[i] + ' ' + fasta_name[i+1] + '\n' + fasta_seq[i] + '\n' + fasta_seq[i+1] + '\n')
 
-for i in range(len(fasta_seq)):
-    fasta_dir= 'D:/Google Drive/01 Studie/02 MEP/01 Literature/02 Syphilis/Python/Fasta/' + fasta_name[i]+ '.fasta'
-    print(fasta_dir)
-    with open(fasta_dir, "w") as file:
-        file.write(">" + fasta_name[i] + '\n' + fasta_seq[i] + '\n')
+# for i in range(len(fasta_seq)):
+#     fasta_dir= 'D:/Google Drive/01 Studie/02 MEP/01 Literature/02 Syphilis/Python/Fasta/' + fasta_name[i]+ '.fasta'
+#     print(fasta_dir)
+#     with open(fasta_dir, "w") as file:
+#         file.write(">" + fasta_name[i] + '\n' + fasta_seq[i] + '\n')
 
-with open("fasta_sequences.fasta", "w") as ofile:
-    for i in range(len(fasta_seq_uqe)):
-        ofile.write(">" + fasta_name_uqe[i] + '\n' + fasta_seq_uqe[i] + '\n')
+# with open("fasta_sequences.fasta", "w") as ofile:
+#     for i in range(len(fasta_seq_uqe)):
+#         ofile.write(">" + fasta_name_uqe[i] + '\n' + fasta_seq_uqe[i] + '\n')
 
 ##############################################
 # sequence_data = open('fasta_pairs.fasta')
