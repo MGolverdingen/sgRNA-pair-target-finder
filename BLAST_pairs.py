@@ -14,9 +14,9 @@ def individual_sequence_blast(filename, species):
 #all sequences blast  
 def blast_all_sequences(fasta_filename, species, xml_filename):
     # query = 'nuccore pubmed[filter] NOT '+species+'[Organism]'
-    query = '(none)'    
+    # query = '(none)'    
     sequence_data = open(fasta_filename)
-    result_handle = NCBIWWW.qblast('blastn', 'nt', sequence_data.read(),entrez_query=query)
+    result_handle = NCBIWWW.qblast('blastn', 'nt', sequence_data.read())
     sequence_data.close()
     
     with open(xml_filename, "w") as save_to:
