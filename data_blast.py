@@ -1,5 +1,5 @@
 from Bio.Blast import NCBIXML
-
+import pandas as pd
 
 def process_blast_data(xml_filename:str, species:str):
     result_handle = open(xml_filename, 'r')
@@ -22,26 +22,29 @@ def process_blast_data(xml_filename:str, species:str):
                         blast_save[sequence.query] = list()
                     blast_save[sequence.query].append((alignment.title, hsp.query[0:23]))
     
+    # need to add the number of matches in the blast, not sure if this BLAST results only 100% matches or also others
     
     match_mismatch_number = {}
+    match_mismatch_list = []
     for (query, matches) in blast_save.items():
         match_count = 0
         mismatch_count = 0
+        mismatch_titles = []
+        mismatch_sequence = []
         for match in matches:
             (title, sequence) = match
             if species in title:
                 match_count = match_count+1
             else:
                 mismatch_count = mismatch_count + 1
-        match_mismatch_number[query] = (match_count, mismatch_count)
-     
-    
-    blast_results = {}
-    for (query_match, matches) in blast_save.items():
-        for (query_counts, counts) in match_mismatch_number.items():
-            if query_match == query_counts:
-                if query_match not in blast_results:
-                    blast_results[query_match] = list()
-                blast_results[query_match].append((matches, counts))
-    return blast_results
-                
+                mismatch_titles.append(title)
+                mismatch_sequence.append(sequence)
+        match_mismatch_number = {"query" : query, 
+                                 "match_count": match_count,
+                                 "mismatch_count": mismatch_count,
+                                 "mismatch_titles": mismatch_titles,
+                                 "mismatch_sequences": mismatch_sequence
+        }
+        match_mismatch_list.append(match_mismatch_number)
+    matches_df = pd.DataFrame(match_mismatch_list)
+    return(matches_df)

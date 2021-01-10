@@ -60,12 +60,16 @@ def check_spacer_length_between_gRNAs(positive_g_rna_list,negative_g_rna_list):
                     "sequence_negative" : neg_g_rna['sequence']
                 }
                 result_matches.append(result_dict)
-             
+                fasta_seq.append(pos_g_rna['sequence'])
+                fasta_seq.append(neg_g_rna['sequence'])
+                fasta_name.append(pos_g_rna['match_no'])
+                fasta_name.append(neg_g_rna['match_no'])
+              
     matches_df = pd.DataFrame(result_matches)
             
     fasta_name_uqe = list(set(fasta_name))
     fasta_seq_uqe = list(set(fasta_seq))
-    return (result_matches, fasta_seq, fasta_name, fasta_seq_uqe, fasta_name_uqe)
+    return (matches_df, fasta_seq, fasta_name, fasta_seq_uqe, fasta_name_uqe)
 ##
 def write_fasta_pairs_file(name, sequence, fasta_filename):
     with open(fasta_filename, "w") as ofile:
