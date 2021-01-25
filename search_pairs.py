@@ -1,11 +1,16 @@
 import pandas as pd
+from Bio.Seq import Seq
 
+
+
+#####FIXXX:POSITIVE gRNA in complementary and reverse!!!
 def read_chopchop_data(chopchop_filename): 
     with open(chopchop_filename, 'r') as f:
         header = f.readline()
         data = f.readlines()
     return(header,data)
-##
+#%%
+
 def get_gRNA_data(header, data):    
     MATCH_NUMBER_FIELD = 0
     POSITION_FIELD = 2
@@ -34,13 +39,13 @@ def get_gRNA_data(header, data):
     negative_g_rna_list = [g for g in g_rna_list if g['sign'] == '-']
     return(positive_g_rna_list, negative_g_rna_list)
 
-##
+
+#%%
 def check_spacer_length_between_gRNAs(positive_g_rna_list,negative_g_rna_list):
+    make_complement = lambda s: str(Seq(s).complement())
     UPPER_LIMIT = 35
     LOWER_LIMIT = 5
     # fasta_matches = ""
-    fasta_seq = []
-    fasta_name = []
     result_matches =[]
     result_dict = {}
     count = 0
@@ -57,30 +62,45 @@ def check_spacer_length_between_gRNAs(positive_g_rna_list,negative_g_rna_list):
                     "match_no_positive" : pos_g_rna['match_no'],
                     "match_no_negative" : neg_g_rna['match_no'],
                     "sequence_positive" : pos_g_rna['sequence'],
-                    "sequence_negative" : neg_g_rna['sequence']
+                    "sequence_negative" : neg_g_rna['sequence'],
+                    "sequence_positive_c" : 
+                        make_complement(pos_g_rna['sequence']), 
+                    "sequence_negative_c" : 
+                        make_complement(neg_g_rna['sequence'])
                 }
                 result_matches.append(result_dict)
-                fasta_seq.append(pos_g_rna['sequence'])
-                fasta_seq.append(neg_g_rna['sequence'])
-                fasta_name.append(pos_g_rna['match_no'])
-                fasta_name.append(neg_g_rna['match_no'])
-              
+                              
     matches_df = pd.DataFrame(result_matches)
-            
-    fasta_name_uqe = list(set(fasta_name))
-    fasta_seq_uqe = list(set(fasta_seq))
-    return (matches_df, fasta_seq, fasta_name, fasta_seq_uqe, fasta_name_uqe)
-##
-def write_fasta_pairs_file(name, sequence, fasta_filename):
-    with open(fasta_filename, "w") as ofile:
-        for i in range(len(sequence)):
-            ofile.write(">" + name[i] + '\n' + sequence[i] + '\n')
+    unique_matches_df = matches_df.drop_duplicates(['match_no_positive', 'match_no_negative'])        
+    return (matches_df, unique_matches_df)
 
-    
-        
-        
-        
-        
+#%%
+def write_fasta_pairs_file(unique_matches_df, fasta_filename):
+  with open(fasta_filename, "w") as ofile:
+      for index, row in unique_matches_df.iterrows():
+          ofile.write(">" + row.match_no_positive +'\n' +
+                      row.sequence_positive +'\n' + ">" +
+                      row.match_no_negative + '_c' + '\n' +
+                      row.sequence_negative_c + '\n' +
+                      ">" + row.match_no_positive +'_c' + '\n' +
+                      row.sequence_positive_c +'\n' + ">" +
+                      row.match_no_negative + '\n' +
+                      row.sequence_negative + '\n')
+
+#%%   
+def write_fasta_pairs_file_for_pairs(matches_df, fasta_filename_pairs):    
+        with open(fasta_filename_pairs, "w") as ofile:
+            for index, row in matches_df.iterrows():
+                ofile.write(">" + row.match_no_positive + '-' +
+                            row.match_no_negative + '_c' + '\n' +
+                            row.sequence_positive +'-'+
+                            row.sequence_negative_c + '\n'+
+                            ">" + row.match_no_positive + '_c' + '-' +
+                            row.match_no_negative + '\n' +
+                            row.sequence_positive_c +'-'+
+                            row.sequence_negative + '\n')        
+            
+       
 # with open("fasta_pairs.fasta", "w") as ofile:
 #     for i in range(0,len(fasta_seq),2):
 #         ofile.write(">" + fasta_name[i] + ' ' + fasta_name[i+1] + '\n' + fasta_seq[i] + '\n' + fasta_seq[i+1] + '\n')
