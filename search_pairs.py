@@ -81,11 +81,11 @@ def write_fasta_pairs_file(unique_matches_df, fasta_filename):
           ofile.write(">" + row.match_no_positive +'\n' +
                       row.sequence_positive +'\n' + ">" +
                       row.match_no_negative + '_c' + '\n' +
-                      row.sequence_negative_c + '\n' +
-                      ">" + row.match_no_positive +'_c' + '\n' +
-                      row.sequence_positive_c +'\n' + ">" +
-                      row.match_no_negative + '\n' +
-                      row.sequence_negative + '\n')
+                      row.sequence_negative_c + '\n')
+                      # + ">" + row.match_no_positive +'_c' + '\n' +
+                      # row.sequence_positive_c +'\n' + ">" +
+                      # row.match_no_negative + '\n' +
+                      # row.sequence_negative + '\n')
 
 #%%   
 def write_fasta_pairs_file_for_pairs(matches_df, fasta_filename_pairs):    
@@ -94,11 +94,11 @@ def write_fasta_pairs_file_for_pairs(matches_df, fasta_filename_pairs):
                 ofile.write(">" + row.match_no_positive + '-' +
                             row.match_no_negative + '_c' + '\n' +
                             row.sequence_positive +'-'+
-                            row.sequence_negative_c + '\n'+
-                            ">" + row.match_no_positive + '_c' + '-' +
-                            row.match_no_negative + '\n' +
-                            row.sequence_positive_c +'-'+
-                            row.sequence_negative + '\n')        
+                            row.sequence_negative_c + '\n')
+                            # ">" + row.match_no_positive + '_c' + '-' +
+                            # row.match_no_negative + '\n' +
+                            # row.sequence_positive_c +'-'+
+                            # row.sequence_negative + '\n')        
             
        
 # with open("fasta_pairs.fasta", "w") as ofile:
