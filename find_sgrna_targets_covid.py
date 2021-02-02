@@ -4,7 +4,7 @@ import BLAST_pairs
 import pandas as pd
 from Bio.Seq import Seq
 
-date = "20012021"
+date = "02022021"
 
 #filenames & search species
 chopchop_filename = "resultscovidsars.tsv"
@@ -26,11 +26,12 @@ def blast_different_pairs(fasta_filename, taxid, xml_filename):
     return(blast_results)
 # ## Merge pair & BLAST data
 def get_pair_info(result_matches, blast_results):    
-    total_results = pd.merge(result_matches,blast_results,left_on="match_no_positive", right_on="query")                                     
-    total_results = total_results.drop(columns=['query'])                                             
-    total_results = total_results.rename(columns={'match_count':'match_count_positive','mismatch_count':"mismatch_count_positive", "mismatch_titles":'mismatch_titles_positive', 'mismatch_sequences':'mismatch_sequences_positive'})
-    total_results = pd.merge(total_results,blast_results,left_on="match_no_negative", right_on="query")                      
-    total_results = total_results.rename(columns={'match_count':'match_count_negative','mismatch_count':"mismatch_count_negative", "mismatch_titles":'mismatch_titles_negative', 'mismatch_sequences':'mismatch_sequences_negative'})
+    # total_results = pd.merge(result_matches,blast_results,left_on="match_no_positive", right_on="query")                                     
+    # total_results = total_results.drop(columns=['query'])                                             
+    # total_results = total_results.rename(columns={'match_count':'match_count_positive','mismatch_count':"mismatch_count_positive", "mismatch_titles":'mismatch_titles_positive', 'mismatch_sequences':'mismatch_sequences_positive'})
+    # total_results = pd.merge(total_results,blast_results,left_on="match_no_negative", right_on="query")                      
+    # total_results = total_results.rename(columns={'match_count':'match_count_negative','mismatch_count':"mismatch_count_negative", "mismatch_titles":'mismatch_titles_negative', 'mismatch_sequences':'mismatch_sequences_negative'})
+    total_results = blast_results
     total_results.to_excel(f"{date}total_results.xlsx")
     
 def master_code_that_runs_the_world(chopchop_filename, fasta_filename, xml_filename, species):
