@@ -8,22 +8,25 @@ This tool works with Python v3.
 The required packages can be found in requirements.txt
 
 ## Example
-chopchop_filename = "resultstrpI2.tsv"  
-fasta_filename = f"fasta_sequences_pairs{date}.fasta"  
-xml_filename = f"fasta_data_{date}.xml"  
+chopchop_filename = "resultstrpI.tsv"  
+fasta_filename = "fasta_sequences_pairs.fasta"  
+xml_filename = "fasta_data.xml"  
 species, taxid=("Treponema pallidum subsp. pallidum", "161")  
-taxid_search = ["9606", "157"]  
+taxid_search = ["157", "9609"]  
 sequence_length = 23  
 upper_limit_spacer = 27  
 lower_limit_spacer =17  
 
 ## Details
 ### Files
-find_sgRNA_targets.py  
- 
-search_pairs.py  
-datablast.py  
-BLAST_pairs_taxid.py  
+find_sgRNA_targets.py: 
+file that runs other files and ensures an excel data output. 
+*search_pairs.py*  
+functions that read the .tsv file from CHOPCHOP, finds pairs with a given spacer length and a PAM-out orientation and gather the pairs in a .fasta file.     
+*BLAST_pairs_taxid.py*  
+functions that use NCBIWWW BLAST to search in specific genome databases for similar sequences as the sgRNA sequence. 
+*datablast.py*  
+function that uses BLAST data to count the number of mismatches of each pair.
 ### Input
 chopchop_filename: a .tsv file with CHOPCHOP results 
 fasta_filename: string with custom name for the .fasta file that is made in find_sgRNA_targets
@@ -34,3 +37,4 @@ sequence_length: integer with sequence length of the single sgRNA
 upper_limit_spacer: upperlimit of spacer length  
 lower_limit_spacer: lowerlimit of spacer length
 ### Output
+Excel Document
