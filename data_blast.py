@@ -1,7 +1,7 @@
 from Bio.Blast import NCBIXML
 import pandas as pd
 
-def process_blast_data(xml_filename:str, species:str):
+def process_blast_data(xml_filename:str, species:str, sequence_length:int):
     result_handle = open(xml_filename, 'r')
     blast_records = NCBIXML.parse(result_handle)
     
@@ -20,9 +20,8 @@ def process_blast_data(xml_filename:str, species:str):
                 if unique:
                     if sequence.query not in blast_save:
                         blast_save[sequence.query] = list()
-                    blast_save[sequence.query].append((alignment.title, hsp.query[0:23]))
+                    blast_save[sequence.query].append((alignment.title, hsp.query[0:sequence_length]))
     
-    # need to add the number of matches in the blast, not sure if this BLAST results only 100% matches or also others
     
     match_mismatch_number = {}
     match_mismatch_list = []

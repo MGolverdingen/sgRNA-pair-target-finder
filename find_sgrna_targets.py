@@ -1,44 +1,74 @@
 import data_blast
 import search_pairs
-import BLAST_pairs
 import BLAST_pairs_taxid
 import pandas as pd
+import numpy as np
 
-date = "02022021"
+date = "08022021"
 
 #filenames & search species
 chopchop_filename = "resultstrpI2.tsv"
-fasta_filename = f"fasta_sequences_{date}.fasta"
-fasta_filename_pairs = f"fasta_sequences_pairs{date}.fasta"
+fasta_filename = f"fasta_sequences_pairs{date}.fasta"
 xml_filename = f"fasta_data_{date}.xml"
 species, taxid=("Treponema pallidum subsp. pallidum", "161")
+taxid_search = ["157", "9606"]
+sequence_length = 23
+upper_limit_spacer = 27
+lower_limit_spacer =17
 
-## search pairs
-def search_different_pairs(chopchop_filename, fasta_filename, 
-                           fasta_filename_pairs):
+#%% search pairs
+def search_different_pairs(chopchop_filename, 
+                           fasta_filename_pairs, 
+                           sequence_length,
+                           upper_limit_spacer,
+                           lower_limit_spacer):
     header, data = search_pairs.read_chopchop_data(chopchop_filename)
-    positive_grna_list, negative_grna_list = search_pairs.get_gRNA_data(header, data)
-    result_matches, unique_matches_df = search_pairs.check_spacer_length_between_gRNAs(positive_grna_list, negative_grna_list)
-    # search_pairs.write_fasta_pairs_file(unique_matches_df, fasta_filename)
-    search_pairs.write_fasta_pairs_file_for_pairs(result_matches, fasta_filename_pairs)
+    positive_grna_list, negative_grna_list = search_pairs.get_gRNA_data(header, 
+                                                                        data, 
+                                                                        sequence_length)
+    result_matches, unique_matches_df = search_pairs.check_spacer_length_between_gRNAs(positive_grna_list, 
+                                                                                       negative_grna_list,
+                                                                                       upper_limit_spacer,
+                                                                                       lower_limit_spacer)
+    search_pairs.write_fasta_pairs_file_for_pairs(result_matches, 
+                                                  fasta_filename_pairs)
 
-# ## BLAST pairs
-def blast_different_pairs(fasta_filename, taxid, xml_filename):
-    BLAST_pairs_taxid.blast_all_sequences(fasta_filename, taxid, xml_filename)
-    blast_results = data_blast.process_blast_data(xml_filename, taxid)
+#%% BLAST pairs
+def blast_different_pairs(fasta_filename, taxid, taxid_search, xml_filename, sequence_length):
+    BLAST_pairs_taxid.blast_all_sequences(fasta_filename, taxid, taxid_search, xml_filename)
+    blast_results = data_blast.process_blast_data(xml_filename, taxid, sequence_length)
     return(blast_results)
 
-# ## Merge pair & BLAST data
-def get_pair_info(blast_results):    
-    # total_results = pd.merge(result_matches,blast_results,left_on="match_no_positive", right_on="query")                                     
-    # total_results = total_results.drop(columns=['query'])                                             
-    # total_results = total_results.rename(columns={'match_count':'match_count_positive','mismatch_count':"mismatch_count_positive", "mismatch_titles":'mismatch_titles_positive', 'mismatch_sequences':'mismatch_sequences_positive'})
-    # total_results = pd.merge(total_results,blast_results,left_on="match_no_negative", right_on="query")                      
-    # total_results = total_results.rename(columns={'match_count':'match_count_negative','mismatch_count':"mismatch_count_negative", "mismatch_titles":'mismatch_titles_negative', 'mismatch_sequences':'mismatch_sequences_negative'})
-    blast_results.to_excel(f"{date}total_results.xlsx")
+def find_full_length_seqs(in_list, full_seq_length):
+    seq_lengths = list(map(len, in_list))
+    full_length_seqs = (np.array(seq_lengths) == full_seq_length)
+    return full_length_seqs
+#%% Seperature full and partial matches for comparison of the pairs
+def separate_full_and_partial_matches(df: pd.DataFrame, full_seq_length: int) -> pd.DataFrame:
+    df['is_full_seq_length'] = df['mismatch_sequences'].map(lambda seq: find_full_length_seqs(seq, full_seq_length))
+    df['full_length_mismatches'] = df.apply(lambda row: list(np.array(row.mismatch_sequences)[row.is_full_seq_length]), axis=1)
+    df['full_length_titles'] = df.apply(lambda row: list(np.array(row.mismatch_titles)[row.is_full_seq_length]), axis=1)
+    df['partial_length_mismatches'] = df.apply(lambda row: list(np.array(row.mismatch_sequences)[np.invert(row.is_full_seq_length)]), axis=1)
+    df['partial_length_titles'] = df.apply(lambda row: list(np.array(row.mismatch_titles)[np.invert(row.is_full_seq_length)]), axis=1)
+    df = df.drop("is_full_seq_length", axis=1)
+    return df
+
+#%% Write resuls to file
+def write_results(blast_results):       
+    blast_results.to_csv(f"{date}total_results.csv", index=False)
     
-def master_code_that_runs_the_world(chopchop_filename, fasta_filename, xml_filename, species):
-    result_matches = search_different_pairs(chopchop_filename, fasta_filename)
-    blast_results = blast_different_pairs(fasta_filename, species, xml_filename)
-    pairs_found = get_pair_info(result_matches, blast_results)
-    return(pairs_found)
+#%%
+    
+result_matches = search_different_pairs(chopchop_filename, fasta_filename, sequence_length, upper_limit_spacer, lower_limit_spacer)
+
+#%%
+
+blast_results = blast_different_pairs(fasta_filename, taxid, taxid_search, xml_filename, sequence_length)
+
+#%%
+
+separated_matches = separate_full_and_partial_matches(blast_results, sequence_length)
+
+#%%
+
+write_results(separated_matches)
